@@ -1,3 +1,5 @@
+from typing import Any
+
 from .unmountedtype import UnmountedType
 from .utils import get_type
 
@@ -8,7 +10,7 @@ class Structure(UnmountedType):
     wraps a main type with certain structure.
     """
 
-    def __init__(self, of_type, *args, **kwargs):
+    def __init__(self, of_type: Any, *args: Any, **kwargs: Any) -> None:
         super(Structure, self).__init__(*args, **kwargs)
         if not isinstance(of_type, Structure) and isinstance(of_type, UnmountedType):
             cls_name = type(self).__name__
@@ -20,10 +22,10 @@ class Structure(UnmountedType):
         self._of_type = of_type
 
     @property
-    def of_type(self):
+    def of_type(self) -> Any:
         return get_type(self._of_type)
 
-    def get_type(self):
+    def get_type(self) -> "Structure":
         """
         This function is called when the unmounted type (List or NonNull instance)
         is mounted (as a Field, InputField or Argument)
@@ -48,10 +50,10 @@ class List(Structure):
         field_name = List(String, description="There will be many values")
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"[{self.of_type}]"
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, List) and (
             self.of_type == other.of_type
             and self.args == other.args
@@ -82,16 +84,16 @@ class NonNull(Structure):
 
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(NonNull, self).__init__(*args, **kwargs)
         assert not isinstance(
             self._of_type, NonNull
         ), f"Can only create NonNull of a Nullable GraphQLType but got: {self._of_type}."
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.of_type}!"
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, NonNull) and (
             self.of_type == other.of_type
             and self.args == other.args
