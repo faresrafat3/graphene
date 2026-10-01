@@ -82,6 +82,49 @@ Here is how you would disable introspection for your schema.
     )
 
 
+Enforcing validation on every query
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The example above validates a single already-parsed query. To apply a rule to
+*every* request, run :func:`graphql.validate` before executing and return the
+errors instead of the result when validation fails:
+
+.. code:: python
+
+    from graphql import graphql_sync, parse, validate
+    from graphene import ObjectType, Schema, String
+    from graphene.validation import DisableIntrospection
+
+
+    class MyQuery(ObjectType):
+        name = String(required=True)
+
+
+    schema = Schema(query=MyQuery)
+
+    validation_rules = (DisableIntrospection,)
+
+
+    def execute(query_string):
+        document = parse(query_string)
+
+        # Validation runs against the same schema that will execute the query.
+        errors = validate(schema.graphql_schema, document, rules=validation_rules)
+        if errors:
+            return {"errors": [error.formatted for error in errors]}
+
+        return graphql_sync(schema.graphql_schema, query_string).formatted
+
+An introspection query is now rejected::
+
+    >>> execute("{ __schema { types { name } } }")
+    {'errors': [{'message': "Cannot query '__schema': introspection is disabled.",
+                 'locations': [{'line': 1, 'column': 3}]}]}
+
+The same ``validation_rules`` tuple is where any other
+:doc:`custom validator <queryvalidation>` is registered.
+
+
 Implementing custom validators
 ------------------------------
 All custom query validators should extend the `ValidationRule <https://github.com/graphql-python/graphql-core/blob/v3.0.5/src/graphql/validation/rules/__init__.py#L37>`_
