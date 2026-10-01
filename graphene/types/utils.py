@@ -1,12 +1,13 @@
 import inspect
 from functools import partial
+from typing import Any, Dict, Optional, Type
 
 from ..utils.module_loading import import_string
 from .mountedtype import MountedType
 from .unmountedtype import UnmountedType
 
 
-def get_field_as(value, _as=None):
+def get_field_as(value: Any, _as: Optional[Type[MountedType]] = None) -> Any:
     """
     Get type mounted
     """
@@ -18,7 +19,11 @@ def get_field_as(value, _as=None):
         return _as.mounted(value)
 
 
-def yank_fields_from_attrs(attrs, _as=None, sort=True):
+def yank_fields_from_attrs(
+    attrs: Dict[str, Any],
+    _as: Optional[Type[MountedType]] = None,
+    sort: bool = True,
+) -> Dict[str, Any]:
     """
     Extract all the fields in given attributes (dict)
     and return them ordered
@@ -35,7 +40,7 @@ def yank_fields_from_attrs(attrs, _as=None, sort=True):
     return dict(fields_with_names)
 
 
-def get_type(_type):
+def get_type(_type: Any) -> Any:
     if isinstance(_type, str):
         return import_string(_type)
     if inspect.isfunction(_type) or isinstance(_type, partial):
@@ -43,7 +48,7 @@ def get_type(_type):
     return _type
 
 
-def get_underlying_type(_type):
+def get_underlying_type(_type: Any) -> Any:
     """Get the underlying type even if it is wrapped in structures like NonNull"""
     while hasattr(_type, "of_type"):
         _type = _type.of_type
