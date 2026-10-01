@@ -49,6 +49,50 @@ Lists work in a similar way: We can use a type modifier to mark a type as a
 It works the same for arguments, where the validation step will expect a list
 for that value.
 
+A list can hold any type, including other ``ObjectType`` classes. The resolver
+returns a plain Python iterable, and Graphene maps each item through the
+declared type:
+
+.. code:: python
+
+    import graphene
+
+    class Person(graphene.ObjectType):
+        name = graphene.String()
+
+    class Query(graphene.ObjectType):
+        people = graphene.List(Person)
+
+        def resolve_people(root, info):
+            return [Person(name="Ada"), Person(name="Grace")]
+
+This produces the type ``[Person]``, and the resolver's return value is
+serialized item by item::
+
+    {"data": {"people": [{"name": "Ada"}, {"name": "Grace"}]}}
+
+The parent object needs to know nothing about the child type beyond the class
+itself; ``Person`` only has to be defined before it is referenced.
+
+Self-referencing lists
+----------------------
+
+A type that returns a list of itself would otherwise need to be defined before
+it exists. Wrap the class in ``lambda`` so the reference is resolved lazily:
+
+.. code:: python
+
+    import graphene
+
+    class User(graphene.ObjectType):
+        name = graphene.String()
+        friends = graphene.List(lambda: User)
+
+        def resolve_friends(root, info):
+            return [User(name=f"{root.name}'s friend")]
+
+The same lazy form is what makes circular references between two types work.
+
 NonNull Lists
 -------------
 
@@ -69,3 +113,14 @@ The above results in the type definition:
     type Character {
         appearsIn: [String!]
     }
+
+Combining ``NonNull`` with ``required=True`` makes the list itself non-null as
+well as its items:
+
+.. code:: python
+
+    tags = graphene.List(graphene.NonNull(graphene.String), required=True)
+
+which gives ``[String!]!`` — the list is always present and never contains
+``null``.
+
