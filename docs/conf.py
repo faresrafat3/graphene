@@ -42,6 +42,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
 ]
 if not on_rtd:
     extensions += ["sphinx.ext.githubpages"]
